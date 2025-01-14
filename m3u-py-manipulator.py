@@ -1,5 +1,6 @@
 #import py_m3u
 #import py_m3u.directives
+#import shutil
 #from m3u_parser import M3uParser
 
 
@@ -65,6 +66,27 @@ def parsem3u(infile):
     infile.close()
 
     return playlist
+
+"""
+Identifies duplicates (by filepath) and renames the song title, the file name 
+and creates a copy of the original file with the new name.
+"""
+    
+def renameDuplicates(playlist):
+    
+    songDictionary = {}
+    for item in playlist:
+        if item.path in playlist:
+            ##rename by adding the number of occurences to file name and song title 
+            charToAdd = str(playlist[item.path]+1)
+            playlist[item.path] += 1 #increment occurence counter
+            #copy file with new path
+            shutil.copy
+
+            item.path += charToAdd
+            item.title += charToAdd
+
+        
 
 # for now, just pull the track info and print it onscreen
 # get the M3U file path from the first command line argument
