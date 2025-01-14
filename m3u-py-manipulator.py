@@ -84,26 +84,28 @@ def renameDuplicates(playlist):
 
         else:
              
+            numeralToAdd = str(songDictionary[item.path])
             songDictionary[item.path] += 1 #increment occurence counter
 
             ##modify path string by adding the number of previous occurences as a literal to it 
-            newPath = item.path + str(songDictionary[item.path]-1)
+            newPath = item.path + numeralToAdd
             
             #copy file with new path
-            shutil.copy(item.path, newPath)
-
+            #shutil.copy(item.path, newPath)
+            print("Copy "+item.path+" to "+newPath+".")
             #update playlist with modify path and title
             item.path = newPath
-            item.title += " "+charToAdd
+            item.title += " " + numeralToAdd
   
         
 
 # for now, just pull the track info and print it onscreen
 # get the M3U file path from the first command line argument
 def main():
-    pathToPlaylist=r"C:\Users\konta\Music\Playlists\Queue_Schlafen ASNR.m3u" #sys.argv[1]
+    pathToPlaylist=r"examples\Playlists\Queue_Schlafen ASNR.m3u" #sys.argv[1]
     m3uFile = open(pathToPlaylist, 'r', encoding='utf-8')
     playlist = parsem3u(m3uFile)
+    renameDuplicates(playlist)
     for track in playlist:
         print (track.artist, track.title, track.length, track.path)
     exit(0)
