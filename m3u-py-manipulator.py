@@ -1,6 +1,5 @@
 #import py_m3u
 #import py_m3u.directives
-#import shutil
 #from m3u_parser import M3uParser
 
 
@@ -11,6 +10,7 @@ pathToM3uFile = r"C:\Users\konta\Music\Playlists\Queue_Schlafen ASNR.m3u"
 
 import sys
 import io
+import shutil
 
 class track():
     def __init__(self, length, artist, title, path):
@@ -75,17 +75,27 @@ and creates a copy of the original file with the new name.
 def renameDuplicates(playlist):
     
     songDictionary = {}
+
     for item in playlist:
-        if item.path in playlist:
-            ##rename by adding the number of occurences to file name and song title 
-            charToAdd = str(playlist[item.path]+1)
-            playlist[item.path] += 1 #increment occurence counter
+
+        if item.path not in songDictionary: 
+
+            songDictionary[item.path] = 1
+
+        else:
+             
+            songDictionary[item.path] += 1 #increment occurence counter
+
+            ##modify path string by adding the number of previous occurences as a literal to it 
+            newPath = item.path + str(songDictionary[item.path]-1)
+            
             #copy file with new path
-            shutil.copy
+            shutil.copy(item.path, newPath)
 
-            item.path += charToAdd
-            item.title += charToAdd
-
+            #update playlist with modify path and title
+            item.path = newPath
+            item.title += " "+charToAdd
+  
         
 
 # for now, just pull the track info and print it onscreen
