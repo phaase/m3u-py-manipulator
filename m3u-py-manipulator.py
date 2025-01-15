@@ -11,13 +11,13 @@ pathToM3uFile = r"C:\Users\konta\Music\Playlists\Queue_Schlafen ASNR.m3u"
 import sys
 import io
 import shutil
+from typing import Final
 import os.path
 from typing import final
 
 #See https://en.wikipedia.org/wiki/M3U for details about the M3U format.
-class m3u_directives:
 
-m3udirective_header: Final = '#EXTM3U:'
+m3udirective_header: Final = '#EXTM3U'
 m3udirective_trackinfo: Final = '#EXTINF:'
 m3udirective_seperator_artist = ','
 m3udirective_seperator_title = '-'
@@ -50,7 +50,7 @@ def parsem3u(infile):
 
     line = infile.readline()
     if not line.startswith(m3udirective_header):
-        print("Input file does not start with " + m3u_directives +".")
+        print("Input file does not start with " + m3udirective_header +".")
         return
 
     # initialize playlist variables before reading file
@@ -59,7 +59,7 @@ def parsem3u(infile):
 
     for line in infile:
         line=line.strip()
-        if line.startswith(m3udirective_trackinfo)):
+        if line.startswith(m3udirective_trackinfo):
             # pull length and title from #EXTINF line
             length, artistTitle = line.split(m3udirective_trackinfo)[1].split(m3udirective_seperator_artist,1)
             artist, title = artistTitle.split(m3udirective_seperator_title, 1)
@@ -71,7 +71,7 @@ def parsem3u(infile):
             # reset the song variable so it doesn't use the same EXTINF more than once
             song=track(None,None,None, None)
     
-    return playlist, 
+    return playlist
 
 """
 Identifies duplicates (by filepath) and renames the song title, the file name 
@@ -100,12 +100,12 @@ def renameDuplicates(playlist):
             newPath = os.path.normpath(origRoot + origExt)
             
             #copy file with new path
-            #shutil.copy(item.path, newPath)
+            shutil.copy(item.path, newPath)
             print("Copy "+item.path+" to "+newPath+".")
             #update playlist with modify path and title
             item.path = newPath
             
-    print("Found " + str(duplicatesCounter) + " duplicates.")
+    print("Found " + str(overallduplicates) + " duplicates.")
         
 
 '''
@@ -116,9 +116,10 @@ def dumpm3uplaylist(playlist, outputfile):
     lines = [m3udirective_header + '\n']
 
     for track in playlist:
-        lines.append(m3udirective_trackinfo + str(track.length()).strip() + m3udirective_seperator_artist + 
-                     str(track.artist).strip + m3udirective_seperator_title + str(track.title).strip() 
+        lines.append(m3udirective_trackinfo + track.length.strip() + m3udirective_seperator_artist + " " + 
+                     track.artist.strip() + " " + m3udirective_seperator_title + " " + track.title.strip()
                      + '\n')
+        lines.append(track.path + "\n")
 
     outputfile.writelines(lines)
 
@@ -139,12 +140,12 @@ def main():
             print (track.artist, track.title, track.length, track.path)
     
     try:
-        m3uoutputfile = open(pathToPlaylistModified, 'x', encoding='utf-8')
+        m3uoutputfile = open(pathToPlaylistModified, 'w', encoding='utf-8')
+        with m3uoutputfile:
+            dumpm3uplaylist(playlist, m3uoutputfile)
     except IOError:
-        print("Could not open output file " + pathToPlaylist + ".")
+        print("Could not create output file " + pathToPlaylist + ".")
     
-    with m3uoutputfile:
-        dumpm3uplaylist(playlist, m3uoutputfile)
     
     exit(0)
 
