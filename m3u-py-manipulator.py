@@ -12,7 +12,15 @@ import sys
 import io
 import shutil
 import os.path
+from typing import final
 
+#See https://en.wikipedia.org/wiki/M3U for details about the M3U format.
+class m3u_directives:
+
+m3udirective_header: Final = '#EXTM3U:'
+m3udirective_trackinfo: Final = '#EXTINF:'
+m3udirective_seperator_artist = ','
+m3udirective_seperator_title = '-'
 class track():
     def __init__(self, length, artist, title, path):
         self.length = length
@@ -31,11 +39,9 @@ class track():
 """
 
 def parsem3u(infile):
-    try:
-        assert(isinstance(infile, io.TextIOWrapper))
-    except AssertionError:
-        infile = open(infile,'r')
 
+  
+        
     """
         All M3U files start with #EXTM3U.
         If the first line doesn't start with this, we're either
@@ -43,8 +49,9 @@ def parsem3u(infile):
     """
 
     line = infile.readline()
-    if not line.startswith('#EXTM3U'):
-       return
+    if not line.startswith(m3udirective_header):
+        print("Input file does not start with " + m3u_directives +".")
+        return
 
     # initialize playlist variables before reading file
     playlist=[]
@@ -52,10 +59,10 @@ def parsem3u(infile):
 
     for line in infile:
         line=line.strip()
-        if line.startswith('#EXTINF:'):
+        if line.startswith(m3udirective_trackinfo)):
             # pull length and title from #EXTINF line
-            length, artistTitle = line.split('#EXTINF:')[1].split(',',1)
-            artist, title = artistTitle.split('-', 1)
+            length, artistTitle = line.split(m3udirective_trackinfo)[1].split(m3udirective_seperator_artist,1)
+            artist, title = artistTitle.split(m3udirective_seperator_title, 1)
             song=track(length, artist, title, None)
         elif (len(line) != 0):
             # pull song path from all other, non-blank lines
@@ -63,10 +70,8 @@ def parsem3u(infile):
             playlist.append(song)
             # reset the song variable so it doesn't use the same EXTINF more than once
             song=track(None,None,None, None)
-
-    infile.close()
-
-    return playlist
+    
+    return playlist, 
 
 """
 Identifies duplicates (by filepath) and renames the song title, the file name 
@@ -103,15 +108,44 @@ def renameDuplicates(playlist):
     print("Found " + str(duplicatesCounter) + " duplicates.")
         
 
+'''
+Dump playlist to m3u file.
+'''
+def dumpm3uplaylist(playlist, outputfile):
+
+    lines = [m3udirective_header + '\n']
+
+    for track in playlist:
+        lines.append(m3udirective_trackinfo + str(track.length()).strip() + m3udirective_seperator_artist + 
+                     str(track.artist).strip + m3udirective_seperator_title + str(track.title).strip() 
+                     + '\n')
+
+    outputfile.writelines(lines)
+
 # for now, just pull the track info and print it onscreen
 # get the M3U file path from the first command line argument
 def main():
     pathToPlaylist=r"examples\Playlists\Queue_Schlafen ASNR.m3u" #sys.argv[1]
-    m3uFile = open(pathToPlaylist, 'r', encoding='utf-8')
-    playlist = parsem3u(m3uFile)
-    renameDuplicates(playlist)
-    for track in playlist:
-        print (track.artist, track.title, track.length, track.path)
+    pathToPlaylistModified = "examples/Playlists\Queue_Schlafen_ASNR_modified.m3u" #sys.argv[2]
+    try:
+        m3uinputfile = open(pathToPlaylist, 'r', encoding='utf-8')
+    except IOError:
+        print("Could not open input file " + pathToPlaylist + ".")
+    
+    with m3uinputfile:
+        playlist = parsem3u(m3uinputfile)
+        renameDuplicates(playlist)
+        for track in playlist:
+            print (track.artist, track.title, track.length, track.path)
+    
+    try:
+        m3uoutputfile = open(pathToPlaylistModified, 'x', encoding='utf-8')
+    except IOError:
+        print("Could not open output file " + pathToPlaylist + ".")
+    
+    with m3uoutputfile:
+        dumpm3uplaylist(playlist, m3uoutputfile)
+    
     exit(0)
 
 if __name__ == '__main__':
